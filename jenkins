@@ -1,0 +1,30 @@
+node
+{
+    def mavenHome = tool name:"maven3.6.3"
+stage ('checkoutbranch')
+{
+    git branch: 'development', credentialsId: 'd801dc5a-b806-47ce-8ace-b716e887552e', url: 'https://github.com/VCHOPPA/maven-web-application.git'
+    
+}
+
+stage ('build')
+{
+ sh "${mavenHome}/bin/mvn clean package"   
+}
+
+stage ('sonarqube_report')
+{
+ sh "${mavenHome}/bin/mvn sonar:sonar"   
+}
+stage ('upload_artifcat')
+{
+ sh "${mavenHome}/bin/mvn deploy"   
+}
+stage ('deploy_app_on tomcat')
+{   
+sshagent(['b12ceee3-8b59-47d3-965f-e0f63429c2fd']) 
+{
+sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.192.79:/opt/apache-tomcat-9.0.37/webapps/"
+}
+}
+}
